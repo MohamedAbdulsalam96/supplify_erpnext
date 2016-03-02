@@ -1,0 +1,11 @@
+[
+ {
+  "docstatus": 0, 
+  "doctype": "Custom Script", 
+  "dt": "Sales Order", 
+  "modified": "2016-03-02 23:39:31.934836", 
+  "name": "Sales Order-Client", 
+  "script": "frappe.ui.form.on(\"Sales Order\", \"refresh\", function(frm){\n    frm.add_custom_button(__(\"Drop Ship\"), function() {\n        frappe.model.open_mapped_doc({\n                        method : \"supplify_erpnext.supplify_erpnext.doctype.drop_ship_invoice.drop_ship_invoice.make_drop_ship_invoice\",\n                        frm : cur_frm\n                })\n         },__(\"Make\"))\n});\n", 
+  "script_type": "Client"
+ }
+]
