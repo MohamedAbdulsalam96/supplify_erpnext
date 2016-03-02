@@ -1,0 +1,3 @@
+supplify_erpnext.config
+supplify_erpnext.config.docs
+supplify_erpnext.config.desktop
