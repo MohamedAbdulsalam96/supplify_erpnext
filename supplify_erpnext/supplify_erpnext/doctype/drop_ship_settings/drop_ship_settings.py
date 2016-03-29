@@ -108,9 +108,6 @@ def get_drop_ship_settings(company):
 	if not out["payable_account"]:
 		frappe.throw(_("Set Default Payable Account in Drop Ship Settings"))
 
-	if not out["tax_account"]:
-		frappe.throw(_("Set Default Tax Account in Drop Ship Settings"))
-
 	if not out["cost_center"]:
 		frappe.throw(_("Set Default Cost Center in Drop Ship Settings"))
 

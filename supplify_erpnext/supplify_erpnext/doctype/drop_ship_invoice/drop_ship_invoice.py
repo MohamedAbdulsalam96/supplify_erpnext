@@ -52,17 +52,6 @@ class DropShipInvoice(Document):
 				item.purchase_amount = item.purchase_rate * item.qty
 			else:
 				frappe.throw(_("Enter Purchase Rate for Item {0}".format(item.item_code)))
-			tax_rate = frappe.db.get_value("Item Tax",
-
-				{
-					"parent": item.item_code,
-					"tax_type": ds_settings["tax_account"]
-
-				}, "tax_rate")
-			if tax_rate:
-				item.tax_rate = flt(tax_rate)
-			else:
-				frappe.throw(_("Tax Rate for Item {0} is not in Item Master".format(item.item_code)))
 
 			item.purchase_tax_amount = item.purchase_amount * (item.tax_rate/100)
 			item.sales_tax_amount = item.amount * (1 - (1/(1+(item.tax_rate/100)))) # Sales Rate includes tax
@@ -159,9 +148,13 @@ class DropShipInvoice(Document):
 
 	def validate_negative_inputs(self):
 		for item in self.items:
-			if item.qty <= 0 or item.rate <= 0:
-				frappe.throw(_("Quantity, Purchase Rate or Selling Rate cannot be zero or negative"))
-
+			if item.qty <= 0:
+				frappe.throw(_("Quantity cannot be zero or negative"))
+			if item.rate <= 0:
+				frappe.throw(_("Purchase Rate cannot be zero or negative"))
+			if item.tax_rate <= 0:
+				frappe.throw(_("Tax Rate cannot be zero or negative"))
+			
 	def get_address(self):
 		from erpnext.accounts.party import get_party_details
 		customer_details = get_party_details(self.customer, party_type="Customer")

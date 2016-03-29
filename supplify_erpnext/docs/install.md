@@ -1,14 +1,14 @@
-<!-- title: Drop Ship Installation -->
+<!-- title: Supplify Erpnext Installation -->
 
 # Installation
 
-Drop Ship is based on the <a href="https://frappe.io">Frappe Framework</a>, a full stack web framework based on Python, MariaDB, Redis, Node.
+Supplify Erpnext is based on the <a href="https://frappe.io">Frappe Framework</a>, a full stack web framework based on Python, MariaDB, Redis, Node.
 
-To intall Drop Ship, you will have to install the <a href="https://github.com/frappe/bench">Frappe Bench</a>, the command-line, package manager and site manager for Frappe Framework. For more details, read the Bench README.
+To intall Supplify Erpnext, you will have to install the <a href="https://github.com/frappe/bench">Frappe Bench</a>, the command-line, package manager and site manager for Frappe Framework. For more details, read the Bench README.
 
-After you have installed Frappe Bench, go to you bench folder, which is     `frappe.bench` by default and setup **drop_ship**.
+After you have installed Frappe Bench, go to you bench folder, which is     `frappe.bench` by default and setup **supplify_erpnext**.
 
-    bench get-app drop_ship {{ source_link }}
+    bench get-app supplify_erpnext {{ source_link }}
 
 Then create a new site to install the app.
 
@@ -16,9 +16,9 @@ Then create a new site to install the app.
 
 This will create a new folder in your `/sites` directory and create a new database for this site.
 
-Next, install drop_ship in this site
+Next, install supplify_erpnext in this site
 
-    bench --site mysite install-app drop_ship
+    bench --site mysite install-app supplify_erpnext
 
 To run this locally, run
 
