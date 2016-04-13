@@ -53,8 +53,8 @@ class DropShipInvoice(Document):
 			else:
 				frappe.throw(_("Enter Purchase Rate for Item {0}".format(item.item_code)))
 
-			item.purchase_tax_amount = item.purchase_amount * (item.tax_rate/100)
-			item.sales_tax_amount = item.amount * (1 - (1/(1+(item.tax_rate/100)))) # Sales Rate includes tax
+			item.purchase_tax_amount = item.purchase_amount * flt(item.tax_rate / 100.0)
+			item.sales_tax_amount = item.amount * flt(1 - (1/(1+(item.tax_rate/100.0)))) # Sales Rate includes tax
 			item.selling_rate_excluding_tax = item.rate - (item.sales_tax_amount/item.qty) # Sales Rate excluding tax displayed
 			total += flt(item.amount)
 			purchase_total += flt(item.purchase_amount)
@@ -154,7 +154,7 @@ class DropShipInvoice(Document):
 				frappe.throw(_("Purchase Rate cannot be zero or negative"))
 			if item.tax_rate <= 0:
 				frappe.throw(_("Tax Rate cannot be zero or negative"))
-			
+
 	def get_address(self):
 		from erpnext.accounts.party import get_party_details
 		customer_details = get_party_details(self.customer, party_type="Customer")
