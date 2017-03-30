@@ -20,6 +20,7 @@ class DropShipInvoice(Document):
 		self.get_address()
 		self.calculate_totals()
 		self.validate_negative_inputs()
+		self.base_grand_total = self.total
 
 	def on_submit(self):
 		self.make_gl()
@@ -91,9 +92,7 @@ class DropShipInvoice(Document):
 			'credit': flt(flt(self.total_commission) - flt(self.purchase_tax_total)), # if self.purchase_tax_total else flt(self.total_commission)
 			'debit_in_account_currency': 0,
 			'credit_in_account_currency': 0,
-			'is_opening': "No", # or self.get("is_opening")
-			'party_type': "Supplier",
-			'party': self.supplier
+			'is_opening': "No" # or self.get("is_opening")
 		})
 		if not account_currency:
 			account_currency = get_account_currency(gl_dict.account)
