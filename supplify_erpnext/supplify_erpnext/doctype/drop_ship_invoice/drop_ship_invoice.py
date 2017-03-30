@@ -204,3 +204,26 @@ def make_drop_ship_invoice(source_name, target_doc=None, ignore_permissions=Fals
 	}, target_doc, postprocess, ignore_permissions=ignore_permissions)
 
 	return doclist
+
+@frappe.whitelist()
+def make_supplier_payment_entry(supplier):
+	supplier = frappe.new_doc("Payment Entry")
+	supplier.payment_type = "Pay"
+	supplier.party_type = "Supplier"
+	supplier.party = supplier
+	supplier.paid_from = frappe.db.get_value("Drop Ship Settings",filters={ "company": frappe.defaults.get_defaults().company}, fieldname="account")
+	# supplier.paid_to =
+	# supplier.paid_amount =
+	frappe.db.commit()
+
+
+@frappe.whitelist()
+def make_customer_payment_entry(customer):
+	customer =  new_doc("Payment Entry")
+	customer.payment_type = "Receive"
+	customer.party_type = "Customer"
+	customer.party = customer
+	customer.paid_to = frappe.db.get_value("Drop Ship Settings",filters={ "company": frappe.defaults.get_defaults().company}, fieldname="account")
+	# customer.paid_from = frappe.db.get_value("")
+
+	frappe.db.commit()
