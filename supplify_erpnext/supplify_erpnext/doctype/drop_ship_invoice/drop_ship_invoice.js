@@ -24,14 +24,23 @@ refresh: function(doc) {
 
 function customer_payment() {
 
+	frappe.call({
+		method: "supplify_erpnext.supplify_erpnext.doctype.drop_ship_settings.drop_ship_settings.get_drop_ship_settings",
+		args: {
+			"company": cur_frm.doc.company
+			},
 
-	var pe = frappe.model.make_new_doc_and_get_name('Payment Entry');
-	pe = locals['Payment Entry'][pe];
-	pe.payment_type = "Receive";
-	pe.party_type = "Customer";
-	pe.party = cur_frm.doc.customer;
-	pe.paid_from = cur_frm.add_fetch("Drop Ship Settings")
-	frappe.set_route("Form", "Payment Entry", pe.name);
+		callback: function(r) {
+		var pe = frappe.model.make_new_doc_and_get_name('Payment Entry');
+		pe = locals['Payment Entry'][pe];
+		pe.posting_date = frappe.datetime.get_today();
+		pe.payment_type = "Receive";
+		pe.party_type = "Customer";
+		pe.party = cur_frm.doc.customer;
+		pe.paid_from = r.message.receivable_account;
+		frappe.set_route("Form", "Payment Entry", pe.name);
+		},
+	});
 }
 
 function supplier_payment() {
@@ -49,7 +58,7 @@ function supplier_payment() {
 			pe.payment_type = "Pay";
 			pe.party_type = "Supplier";
 			pe.party = cur_frm.doc.supplier;
-			pe.paid_to = r.message.payable_account;
+			pe.paid_to = r.message.rece_account;
 			frappe.set_route("Form", "Payment Entry", pe.name);
 		},
 		});
