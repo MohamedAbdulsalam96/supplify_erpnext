@@ -58,7 +58,7 @@ function supplier_payment() {
 			pe.payment_type = "Pay";
 			pe.party_type = "Supplier";
 			pe.party = cur_frm.doc.supplier;
-			pe.paid_to = r.message.rece_account;
+			pe.paid_to = r.message.payable_account;
 			frappe.set_route("Form", "Payment Entry", pe.name);
 		},
 		});
