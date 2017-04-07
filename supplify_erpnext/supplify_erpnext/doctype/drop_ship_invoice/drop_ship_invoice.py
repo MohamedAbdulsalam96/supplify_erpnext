@@ -232,6 +232,9 @@ def make_drop_ship_invoice(source_name, target_doc=None, ignore_permissions=Fals
 # 	frappe.db.commit()
 
 @frappe.whitelist()
-def get_account(company):
-	s = get_drop_ship_settings(company)['payable_account']
+def get_account(company,party_type):
+	if party_type == "Supplier":
+		s = get_drop_ship_settings(company)['payable_account']
+	else:
+		s = get_drop_ship_settings(company)['receivable_account']
 	return s

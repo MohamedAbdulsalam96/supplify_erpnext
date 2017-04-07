@@ -36,8 +36,6 @@ function customer_payment() {
 		pe.posting_date = frappe.datetime.get_today();
 		pe.payment_type = "Receive";
 		pe.party_type = "Customer";
-		/*pe.party = cur_frm.doc.customer;*/
-		pe.paid_from = r.message.receivable_account;
 		frappe.route_options = {"customer": cur_frm.doc.customer}
 		frappe._from_link = this
 		frappe.set_route("Form", "Payment Entry", pe.name);
@@ -60,8 +58,6 @@ function supplier_payment() {
 			pe.posting_date = frappe.datetime.get_today();
 			pe.payment_type = "Pay";
 			pe.party_type = "Supplier";
-			// pe.party = cur_frm.doc.supplier;
-			pe.paid_to = r.message.payable_account;
 			frappe.route_options = {"supplier": cur_frm.doc.supplier}
 			frappe._from_link = this
 			frappe.set_route("Form", "Payment Entry", pe.name);
@@ -74,4 +70,3 @@ cur_frm.add_fetch("item_code", "stock_uom", "stock_uom");
 cur_frm.add_fetch("company", "default_currency", "company_currency");
 cur_frm.add_fetch("customer", "customer_name", "customer_name");
 cur_frm.add_fetch("supplier", "supplier_name", "supplier_name");
-
