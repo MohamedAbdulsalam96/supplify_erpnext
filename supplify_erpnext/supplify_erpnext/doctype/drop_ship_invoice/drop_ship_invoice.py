@@ -204,25 +204,34 @@ def make_drop_ship_invoice(source_name, target_doc=None, ignore_permissions=Fals
 
 	return doclist
 
+# @frappe.whitelist()
+# def make_supplier_payment_entry(supplier):
+# 	pe_supplier = frappe.new_doc("Payment Entry")
+# 	pe_supplier.posting_date = frappe.utils.datetime.datetime.today()
+# 	pe_supplier.payment_type = "Pay"
+# 	pe_supplier.party_type = "Supplier"
+# 	pe_supplier.party = supplier
+# 	pe_supplier.paid_to = get_drop_ship_settings(frappe.defaults.get_defaults().company)['payable_account']
+# 	# supplier.paid_to =
+# 	# pe_supplier.paid_from =
+# 	# supplier.paid_amount =
+# 	pe_supplier.save()
+# 	frappe.db.commit()
+# 	return pe_supplier.name
+
+
+# @frappe.whitelist()
+# def make_customer_payment_entry(customer):
+# 	customer =  new_doc("Payment Entry")
+# 	customer.payment_type = "Receive"
+# 	customer.party_type = "Customer"
+# 	customer.party = customer
+# 	# customer.paid_to = frappe.db.get_value("Drop Ship Settings",filters={ "company": frappe.defaults.get_defaults().company}, fieldname="account")
+# 	customer.paid_from = frappe.db.get_value("")
+
+# 	frappe.db.commit()
+
 @frappe.whitelist()
-def make_supplier_payment_entry(supplier):
-	supplier = frappe.new_doc("Payment Entry")
-	supplier.payment_type = "Pay"
-	supplier.party_type = "Supplier"
-	supplier.party = supplier
-	supplier.paid_from = frappe.db.get_value("Drop Ship Settings",filters={ "company": frappe.defaults.get_defaults().company}, fieldname="account")
-	# supplier.paid_to =
-	# supplier.paid_amount =
-	frappe.db.commit()
-
-
-@frappe.whitelist()
-def make_customer_payment_entry(customer):
-	customer =  new_doc("Payment Entry")
-	customer.payment_type = "Receive"
-	customer.party_type = "Customer"
-	customer.party = customer
-	customer.paid_to = frappe.db.get_value("Drop Ship Settings",filters={ "company": frappe.defaults.get_defaults().company}, fieldname="account")
-	# customer.paid_from = frappe.db.get_value("")
-
-	frappe.db.commit()
+def get_account(company):
+	s = get_drop_ship_settings(company)['payable_account']
+	return s

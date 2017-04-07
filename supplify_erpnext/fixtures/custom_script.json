@@ -2,10 +2,10 @@
  {
   "docstatus": 0, 
   "doctype": "Custom Script", 
-  "dt": "Sales Order", 
-  "modified": "2016-03-02 23:39:31.934836", 
-  "name": "Sales Order-Client", 
-  "script": "frappe.ui.form.on(\"Sales Order\", \"refresh\", function(frm){\n    frm.add_custom_button(__(\"Drop Ship\"), function() {\n        frappe.model.open_mapped_doc({\n                        method : \"supplify_erpnext.supplify_erpnext.doctype.drop_ship_invoice.drop_ship_invoice.make_drop_ship_invoice\",\n                        frm : cur_frm\n                })\n         },__(\"Make\"))\n});\n", 
+  "dt": "Payment Entry", 
+  "modified": "2017-04-07 18:33:58.136184", 
+  "name": "Payment Entry-Client", 
+  "script": "frappe.ui.form.on(\"Payment Entry\", {\n    //refresh:set_fields,\n    party_type:set_fields,\n    party:function(frm){\n        \n    }\n});\n\nfunction set_fields(){\n    console.log(frappe.route_options.supplier);\n    cur_frm.set_value(\"party\",frappe.route_options.supplier || frappe.route_options.customer);\n    delete frappe.route_options.supplier;\n    delete frappe.route_options.customer;\n    frappe.call({              \n        method:\"supplify_erpnext.supplify_erpnext.doctype.drop_ship_invoice.drop_ship_invoice.get_account\",\n        args:{\n            \"company\":cur_frm.doc.company,\n    \"party_type\":cur_frm.doc.party_type\n        },\n        callback:function(r){\n            console.log(\"Account\", r.message);\n            if(r.party_type = \"Supplier\"){\n                    cur_frm.set_value(\"paid_to\", r.message);\n            }else{\n                cur_frm.set_value(\"paid_from\", r.message);\n            }\n        }\n    });\n}\n", 
   "script_type": "Client"
  }
 ]

@@ -19,7 +19,7 @@ refresh: function(doc) {
 
 		cur_frm.add_custom_button(__('To Supplier'), function(){supplier_payment()},__("Make"));
 		cur_frm.add_custom_button(__('Receive from customer'), function(){customer_payment()},__("Make"));
-	},
+	}
 });
 
 function customer_payment() {
@@ -36,8 +36,10 @@ function customer_payment() {
 		pe.posting_date = frappe.datetime.get_today();
 		pe.payment_type = "Receive";
 		pe.party_type = "Customer";
-		pe.party = cur_frm.doc.customer;
+		/*pe.party = cur_frm.doc.customer;*/
 		pe.paid_from = r.message.receivable_account;
+		frappe.route_options = {"customer": cur_frm.doc.customer}
+		frappe._from_link = this
 		frappe.set_route("Form", "Payment Entry", pe.name);
 		},
 	});
@@ -52,13 +54,16 @@ function supplier_payment() {
 			},
 
 		callback: function(r) {
+			console.log(r.message.payable_account);
 			var pe = frappe.model.make_new_doc_and_get_name('Payment Entry');
 			pe = locals['Payment Entry'][pe];
 			pe.posting_date = frappe.datetime.get_today();
 			pe.payment_type = "Pay";
 			pe.party_type = "Supplier";
-			pe.party = cur_frm.doc.supplier;
+			// pe.party = cur_frm.doc.supplier;
 			pe.paid_to = r.message.payable_account;
+			frappe.route_options = {"supplier": cur_frm.doc.supplier}
+			frappe._from_link = this
 			frappe.set_route("Form", "Payment Entry", pe.name);
 		},
 		});
