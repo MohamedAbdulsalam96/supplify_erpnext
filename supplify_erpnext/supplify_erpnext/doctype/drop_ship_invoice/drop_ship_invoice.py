@@ -22,8 +22,13 @@ class DropShipInvoice(Document):
 		self.validate_negative_inputs()
 		self.base_grand_total = self.total
 
-	def on_submit(self):
-		self.make_gl()
+	def before_submit(self):
+		if not self.sales_invoice: # add sales_invoice link field
+			self.sales_invoice = self.make_sales_invoice()
+
+		if not self.purchase_invoice: # add sales_invoice link field
+			self.purchase_invoice = self.make_purchase_invoice()
+
 
 	def on_cancel(self):
 		from erpnext.accounts.general_ledger import delete_gl_entries
@@ -161,6 +166,72 @@ class DropShipInvoice(Document):
 		self.address_display = customer_details["address_display"]
 		self.supplier_address_display = supplier_details["address_display"]
 
+
+	def make_sales_invoice(self):
+		defaults_temp = frappe.defaults.get_defaults()
+
+		#Create a sales order if customer is selected.
+		si = frappe.new_doc("Sales Invoice")
+		si.transaction_date = self.posting_time
+
+		si.company = defaults_temp.get("company")
+		si.customer = self.customer
+
+
+		si.currency = defaults_temp.get("currency")
+		si.selling_price_list = defaults_temp.get("selling_price_list")
+
+		for di_item in self.items:
+			si.append("items", {
+				"item_code": di_item.item_code,
+				"qty": di_item.qty,
+				"rate": di_item.rate,
+				"conversion_factor": 1.0,
+				"amount": di_item.amount
+			})
+
+		try:
+			si.save()
+			si.submit()
+		except Exception, e:
+			frappe.throw(_("Sales Invoice was not saved. <br/> %s" % (e)))
+		else:
+			return si.name
+
+
+	def make_purchase_invoice(self):
+		defaults_temp = frappe.defaults.get_defaults()
+
+		#Create a sales order if customer is selected.
+		si = frappe.new_doc("Purchase Invoice")
+		si.transaction_date = self.posting_time
+
+		si.company = defaults_temp.get("company")
+		si.supplier = self.supplier
+
+
+		#si.rn_service_time_slot = self.starts_on + ", " + self.starts_on + " - " + self.ends_o
+
+		si.currency = defaults_temp.get("currency")
+		si.selling_price_list = defaults_temp.get("selling_price_list")
+
+		for di_item in self.items:
+			si.append("items", {
+				"item_code": di_item.item_code,
+				"qty": di_item.qty,
+				"rate": di_item.purchase_rate,
+				"conversion_factor": 1.0,
+				"amount": di_item.purchase_amount
+			})
+
+		try:
+			si.save()
+			si.submit()
+		except Exception, e:
+			frappe.throw(_("Purchase Invoice was not saved. <br/> %s" % (e)))
+		else:
+			return si.name
+
 @frappe.whitelist()
 def make_drop_ship_invoice(source_name, target_doc=None, ignore_permissions=False):
 	def postprocess(source, target):
@@ -238,3 +309,5 @@ def get_account(company,party_type):
 	else:
 		s = get_drop_ship_settings(company)['receivable_account']
 	return s
+
+
