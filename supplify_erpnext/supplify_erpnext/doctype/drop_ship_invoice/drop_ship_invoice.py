@@ -168,6 +168,11 @@ class DropShipInvoice(Document):
 
 
 	def make_sales_invoice(self):
+		abbr = frappe.db.get_value("Company",frappe.defaults.get_defaults()["company"],"abbr")
+		ds_settings = get_drop_ship_settings(self.company)
+
+		ia = ds_settings["income_account"]
+
 		defaults_temp = frappe.defaults.get_defaults()
 
 		#Create a sales order if customer is selected.
@@ -185,10 +190,20 @@ class DropShipInvoice(Document):
 			si.append("items", {
 				"item_code": di_item.item_code,
 				"qty": di_item.qty,
-				"rate": di_item.rate,
+				"rate": di_item.rate - (di_item.purchase_rate + (di_item.purchase_tax_amount / di_item.qty)),
 				"conversion_factor": 1.0,
-				"amount": di_item.amount
+				"amount": di_item.amount,
+				"account":ia
 			})
+		si.append("taxes", {
+			"charge_type": "Actual",
+			"account_head": "Stock Received But Not Billed - " + abbr,
+			"description": "Cost of Goods Sold",
+			"tax_amount": self.purchase_total + self.purchase_tax_total
+			})
+
+
+
 
 		try:
 			si.save()
@@ -200,6 +215,8 @@ class DropShipInvoice(Document):
 
 
 	def make_purchase_invoice(self):
+		abbr = frappe.db.get_value("Company",frappe.defaults.get_defaults()["company"],"abbr")
+		ds_settings = get_drop_ship_settings(self.company)
 		defaults_temp = frappe.defaults.get_defaults()
 
 		#Create a sales order if customer is selected.
@@ -223,6 +240,14 @@ class DropShipInvoice(Document):
 				"conversion_factor": 1.0,
 				"amount": di_item.purchase_amount
 			})
+
+		account_head = get_drop_ship_settings(frappe.defaults.get_defaults().company)['tax_account']
+		si.append("taxes", {
+			"charge_type": "On Net Total",
+			"account_head": account_head,
+			"description": frappe.db.get_value("Account", account_head, 'account_name')
+			})
+
 
 		try:
 			si.save()
