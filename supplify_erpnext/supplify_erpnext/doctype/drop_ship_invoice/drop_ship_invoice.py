@@ -243,9 +243,10 @@ class DropShipInvoice(Document):
 
 		account_head = get_drop_ship_settings(frappe.defaults.get_defaults().company)['tax_account']
 		si.append("taxes", {
-			"charge_type": "On Net Total",
+			"charge_type": "Actual",
 			"account_head": account_head,
-			"description": frappe.db.get_value("Account", account_head, 'account_name')
+			"description": frappe.db.get_value("Account", account_head, 'account_name'),
+			"tax_amount": self.purchase_tax_total
 			})
 
 
