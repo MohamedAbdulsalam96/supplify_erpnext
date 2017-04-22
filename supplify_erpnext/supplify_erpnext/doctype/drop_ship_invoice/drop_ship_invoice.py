@@ -22,8 +22,13 @@ class DropShipInvoice(Document):
 		self.validate_negative_inputs()
 		self.base_grand_total = self.total
 
-	def on_submit(self):
-		self.make_gl()
+	def before_submit(self):
+		if not self.sales_invoice: # add sales_invoice link field
+			self.sales_invoice = self.make_sales_invoice()
+
+		if not self.purchase_invoice: # add sales_invoice link field
+			self.purchase_invoice = self.make_purchase_invoice()
+
 
 	def on_cancel(self):
 		from erpnext.accounts.general_ledger import delete_gl_entries
@@ -161,6 +166,98 @@ class DropShipInvoice(Document):
 		self.address_display = customer_details["address_display"]
 		self.supplier_address_display = supplier_details["address_display"]
 
+
+	def make_sales_invoice(self):
+		abbr = frappe.db.get_value("Company",frappe.defaults.get_defaults()["company"],"abbr")
+		ds_settings = get_drop_ship_settings(self.company)
+
+		ia = ds_settings["income_account"]
+
+		defaults_temp = frappe.defaults.get_defaults()
+
+		#Create a sales order if customer is selected.
+		si = frappe.new_doc("Sales Invoice")
+		si.transaction_date = self.posting_time
+
+		si.company = defaults_temp.get("company")
+		si.customer = self.customer
+
+
+		si.currency = defaults_temp.get("currency")
+		si.selling_price_list = defaults_temp.get("selling_price_list")
+
+		for di_item in self.items:
+			si.append("items", {
+				"item_code": di_item.item_code,
+				"qty": di_item.qty,
+				"rate": di_item.rate - (di_item.purchase_rate + (di_item.purchase_tax_amount / di_item.qty)),
+				"conversion_factor": 1.0,
+				"amount": di_item.amount,
+				"account":ia
+			})
+		si.append("taxes", {
+			"charge_type": "Actual",
+			"account_head": "Stock Received But Not Billed - " + abbr,
+			"description": "Cost of Goods Sold",
+			"tax_amount": self.purchase_total + self.purchase_tax_total
+			})
+
+
+
+
+		try:
+			si.save()
+			si.submit()
+		except Exception, e:
+			frappe.throw(_("Sales Invoice was not saved. <br/> %s" % (e)))
+		else:
+			return si.name
+
+
+	def make_purchase_invoice(self):
+		abbr = frappe.db.get_value("Company",frappe.defaults.get_defaults()["company"],"abbr")
+		ds_settings = get_drop_ship_settings(self.company)
+		defaults_temp = frappe.defaults.get_defaults()
+
+		#Create a sales order if customer is selected.
+		si = frappe.new_doc("Purchase Invoice")
+		si.transaction_date = self.posting_time
+
+		si.company = defaults_temp.get("company")
+		si.supplier = self.supplier
+
+
+		#si.rn_service_time_slot = self.starts_on + ", " + self.starts_on + " - " + self.ends_o
+
+		si.currency = defaults_temp.get("currency")
+		si.selling_price_list = defaults_temp.get("selling_price_list")
+
+		for di_item in self.items:
+			si.append("items", {
+				"item_code": di_item.item_code,
+				"qty": di_item.qty,
+				"rate": di_item.purchase_rate,
+				"conversion_factor": 1.0,
+				"amount": di_item.purchase_amount
+			})
+
+		account_head = get_drop_ship_settings(frappe.defaults.get_defaults().company)['tax_account']
+		si.append("taxes", {
+			"charge_type": "Actual",
+			"account_head": account_head,
+			"description": frappe.db.get_value("Account", account_head, 'account_name'),
+			"tax_amount": self.purchase_tax_total
+			})
+
+
+		try:
+			si.save()
+			si.submit()
+		except Exception, e:
+			frappe.throw(_("Purchase Invoice was not saved. <br/> %s" % (e)))
+		else:
+			return si.name
+
 @frappe.whitelist()
 def make_drop_ship_invoice(source_name, target_doc=None, ignore_permissions=False):
 	def postprocess(source, target):
@@ -204,25 +301,39 @@ def make_drop_ship_invoice(source_name, target_doc=None, ignore_permissions=Fals
 
 	return doclist
 
+# @frappe.whitelist()
+# def make_supplier_payment_entry(supplier):
+# 	pe_supplier = frappe.new_doc("Payment Entry")
+# 	pe_supplier.posting_date = frappe.utils.datetime.datetime.today()
+# 	pe_supplier.payment_type = "Pay"
+# 	pe_supplier.party_type = "Supplier"
+# 	pe_supplier.party = supplier
+# 	pe_supplier.paid_to = get_drop_ship_settings(frappe.defaults.get_defaults().company)['payable_account']
+# 	# supplier.paid_to =
+# 	# pe_supplier.paid_from =
+# 	# supplier.paid_amount =
+# 	pe_supplier.save()
+# 	frappe.db.commit()
+# 	return pe_supplier.name
+
+
+# @frappe.whitelist()
+# def make_customer_payment_entry(customer):
+# 	customer =  new_doc("Payment Entry")
+# 	customer.payment_type = "Receive"
+# 	customer.party_type = "Customer"
+# 	customer.party = customer
+# 	# customer.paid_to = frappe.db.get_value("Drop Ship Settings",filters={ "company": frappe.defaults.get_defaults().company}, fieldname="account")
+# 	customer.paid_from = frappe.db.get_value("")
+
+# 	frappe.db.commit()
+
 @frappe.whitelist()
-def make_supplier_payment_entry(supplier):
-	supplier = frappe.new_doc("Payment Entry")
-	supplier.payment_type = "Pay"
-	supplier.party_type = "Supplier"
-	supplier.party = supplier
-	supplier.paid_from = frappe.db.get_value("Drop Ship Settings",filters={ "company": frappe.defaults.get_defaults().company}, fieldname="account")
-	# supplier.paid_to =
-	# supplier.paid_amount =
-	frappe.db.commit()
+def get_account(company,party_type):
+	if party_type == "Supplier":
+		s = get_drop_ship_settings(company)['payable_account']
+	else:
+		s = get_drop_ship_settings(company)['receivable_account']
+	return s
 
 
-@frappe.whitelist()
-def make_customer_payment_entry(customer):
-	customer =  new_doc("Payment Entry")
-	customer.payment_type = "Receive"
-	customer.party_type = "Customer"
-	customer.party = customer
-	customer.paid_to = frappe.db.get_value("Drop Ship Settings",filters={ "company": frappe.defaults.get_defaults().company}, fieldname="account")
-	# customer.paid_from = frappe.db.get_value("")
-
-	frappe.db.commit()

@@ -110,5 +110,4 @@ app_license = "GPL v3"
 # override_whitelisted_methods = {
 # 	"frappe.desk.doctype.event.event.get_events": "supplify_erpnext.event.get_events"
 # }
-
-fixtures = ["Custom Script"]
+fixtures = [{"dt":"Custom Script", "filters": [["name", "in", ["Payment Entry-Client"]]]}]
