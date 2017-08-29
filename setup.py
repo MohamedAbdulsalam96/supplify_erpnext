@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
-import os
+import os, re, ast
 
 # get version from __version__ variable in supplify_erpnext/__init__.py
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
